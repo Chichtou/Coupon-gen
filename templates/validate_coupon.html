@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Validate Coupon{% endblock %}
+{% block content %}
+<h2>Validate a Coupon</h2>
+
+<form method="post" id="validateForm">
+  <div>
+    <label for="code">Coupon Code:</label>
+    <input type="text" name="code" id="couponInput" required>
+  </div>
+  <div>
+    <input type="submit" value="Validate Coupon">
+  </div>
+</form>
+
+<!-- Icon button for camera scan using Phosphor Icons -->
+<button id="startScan" class="camera-button" title="Scan Coupon">
+  <i class="ph ph-camera"></i>
+  <span class="fallback-text">Scan</span>
+</button>
+
+<div id="reader" style="width:300px; margin-top:10px;"></div>
+
+{% if message %}
+<p>{{ message }}</p>
+{% endif %}
+
+<!-- Include html5-qrcode library from CDN -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+  const startScanButton = document.getElementById('startScan');
+  const couponInput = document.getElementById('couponInput');
+  const readerElement = document.getElementById('reader');
+
+  startScanButton.addEventListener('click', () => {
+    // Hide the scan button when scanning starts.
+    startScanButton.style.display = 'none';
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 250 };
+
+    html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText, decodedResult) => {
+          // On successful scan, fill the input and submit the form.
+          couponInput.value = decodedText;
+          html5QrCode.stop().then(() => {
+              readerElement.innerHTML = "";
+              document.getElementById('validateForm').submit();
+          }).catch(err => {
+              console.error("Error stopping scanner", err);
+          });
+      },
+      (errorMessage) => {
+          console.warn("Scan error:", errorMessage);
+      }
+    ).catch(err => {
+      console.error("Unable to start scanning.", err);
+    });
+  });
+</script>
+{% endblock %}

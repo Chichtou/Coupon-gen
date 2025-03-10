@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Coupon Management App{% endblock %}</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Phosphor Icons CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/phosphor-icons@1.4.1/src/css/phosphor.css">
+</head>
+<body>
+  <header>
+    <h1>Coupon Management App</h1>
+    <nav class="menu">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('generate_coupons') }}">Generate Coupons</a>
+      <a href="{{ url_for('validate_coupon') }}">Validate Coupon</a>
+    </nav>
+  </header>
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
