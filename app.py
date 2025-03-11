@@ -7,9 +7,6 @@ import base64
 from datetime import datetime, timedelta
 
 from flask import Flask, request, render_template, Response, url_for
-
-# If you plan to generate QR codes for coupons, install qrcode and Pillow:
-# pip install qrcode[pil]
 import qrcode
 
 app = Flask(__name__)
@@ -41,7 +38,7 @@ def generate_coupon_code():
 def generate_qr_base64(text):
     """
     Generates a QR code image for the given text and returns it as a base64 data URL.
-    Remove if you don't need QR code generation.
+    Example: data:image/png;base64,iVBORw0K...
     """
     qr = qrcode.QRCode(version=1, box_size=6, border=2)
     qr.add_data(text)
@@ -61,10 +58,10 @@ def index():
 def generate_coupons():
     """
     Allows the user to:
-      - Enter a number (count) to generate that many coupons with no email
+      - Enter a number (count) to generate that many coupons without emails
       - Upload a CSV file of emails to generate one coupon per email
-    Returns a page displaying the generated coupons (optionally with QR codes)
-    and provides a downloadable CSV.
+    Returns a page displaying the generated coupons (with QR codes) and
+    provides a downloadable CSV containing the qr field.
     """
     coupons = []
     csv_output = ""
@@ -106,7 +103,7 @@ def generate_coupons():
                         "INSERT INTO coupons (email, code, created_at, expires_at, domain) VALUES (?, ?, ?, ?, ?)",
                         (email, code, now, expires_at, DEFAULT_DOMAIN)
                     )
-                    qr_img = generate_qr_base64(code)  # Remove if you don't need QR codes
+                    qr_img = generate_qr_base64(code)
                     coupons.append({
                         'email': email,
                         'code': code,
@@ -132,7 +129,7 @@ def generate_coupons():
                         "INSERT INTO coupons (email, code, created_at, expires_at, domain) VALUES (?, ?, ?, ?, ?)",
                         (None, code, now, expires_at, DEFAULT_DOMAIN)
                     )
-                    qr_img = generate_qr_base64(code)  # Remove if you don't need QR codes
+                    qr_img = generate_qr_base64(code)
                     coupons.append({
                         'email': '',
                         'code': code,
@@ -145,15 +142,16 @@ def generate_coupons():
         else:
             return "Please provide a CSV file or a number of coupons to generate.", 400
 
-        # Build a CSV output from the generated coupons
+        # Build a CSV output from the generated coupons, including the 'qr' field
         output = io.StringIO()
-        fieldnames = ['email', 'code', 'created_at', 'expires_at', 'redeemed']
+        fieldnames = ['email', 'code', 'qr', 'created_at', 'expires_at', 'redeemed']
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         for coupon in coupons:
             writer.writerow({
                 'email': coupon['email'],
                 'code': coupon['code'],
+                'qr': coupon['qr'],  # base64 data
                 'created_at': coupon['created_at'],
                 'expires_at': coupon['expires_at'],
                 'redeemed': coupon['redeemed']
@@ -161,6 +159,7 @@ def generate_coupons():
         csv_output = output.getvalue()
         output.close()
 
+        # Render the page with generated coupons and CSV data
         return render_template("generate_coupons.html", coupons=coupons, csv_data=csv_output)
 
     # If GET request, just render the page without coupons

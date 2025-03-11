@@ -6,18 +6,24 @@
 <form method="post" id="validateForm">
   <div>
     <label for="code">Coupon Code:</label>
-    <input type="text" name="code" id="couponInput" required>
+    <input type="text" name="code" id="couponInput" required autocomplete="off">
   </div>
-  <!-- Inline the Validate button and the Scan button in the same row -->
   <div class="button-row">
+    <!-- The Validate button always visible -->
     <input type="submit" value="Validate Coupon">
-    <button id="startScan" class="camera-button" title="Scan Coupon">
+    <!-- The Scan button (shown by default) -->
+    <button id="startScan" class="camera-button" type="button" title="Scan Coupon">
       Scan
+    </button>
+    <!-- The Cancel button (hidden by default) -->
+    <button id="cancelScan" class="camera-button" type="button" style="display:none;">
+      Cancel
     </button>
   </div>
 </form>
 
-<div id="reader" style="width:300px; margin-top:10px;"></div>
+<!-- Camera feed area, hidden by default -->
+<div id="reader" class="camera-reader" style="display:none;"></div>
 
 {% if message %}
   {% if "valid" in message %}
@@ -33,35 +39,56 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
   const startScanButton = document.getElementById('startScan');
+  const cancelScanButton = document.getElementById('cancelScan');
   const couponInput = document.getElementById('couponInput');
   const readerElement = document.getElementById('reader');
 
+  let html5QrCode = null;
+
   startScanButton.addEventListener('click', () => {
-    // Hide the button when scanning starts (optional)
+    // Hide "Scan," show "Cancel"
     startScanButton.style.display = 'none';
+    cancelScanButton.style.display = 'inline-flex';
+    // Show the camera feed area
+    readerElement.style.display = 'block';
 
-    const html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: 250 };
-
+    // Initialize the QR code scanner
+    html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start(
       { facingMode: "environment" },
-      config,
-      (decodedText, decodedResult) => {
-          // On successful scan, fill the input and submit the form.
-          couponInput.value = decodedText;
-          html5QrCode.stop().then(() => {
-              readerElement.innerHTML = "";
-              document.getElementById('validateForm').submit();
-          }).catch(err => {
-              console.error("Error stopping scanner", err);
-          });
+      { fps: 10, qrbox: 250 },
+      (decodedText) => {
+        // On successful scan, fill input and submit form
+        couponInput.value = decodedText;
+        stopCamera();
+        document.getElementById('validateForm').submit();
       },
       (errorMessage) => {
-          console.warn("Scan error:", errorMessage);
+        console.warn("Scan error:", errorMessage);
       }
     ).catch(err => {
       console.error("Unable to start scanning.", err);
     });
   });
+
+  cancelScanButton.addEventListener('click', () => {
+    // Stop scanning without submitting
+    stopCamera();
+  });
+
+  function stopCamera() {
+    if (html5QrCode) {
+      html5QrCode.stop().then(() => {
+        readerElement.innerHTML = "";
+      }).catch(err => {
+        console.error("Error stopping scanner", err);
+      });
+    }
+    // Show "Scan," hide "Cancel"
+    startScanButton.style.display = 'inline-flex';
+    cancelScanButton.style.display = 'none';
+    // Hide camera feed
+    readerElement.style.display = 'none';
+  }
 </script>
 {% endblock %}
