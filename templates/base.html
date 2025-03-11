@@ -4,19 +4,20 @@
   <meta charset="UTF-8">
   <title>{% block title %}Coupon Management App{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Link to your updated global stylesheet -->
+  <!-- Optional: link to global stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header>
     <h1>Coupon Management App</h1>
-    <nav class="menu">
+    <nav>
       <a href="{{ url_for('index') }}">Home</a>
       <a href="{{ url_for('generate_coupons') }}">Generate Coupons</a>
       <a href="{{ url_for('validate_coupon') }}">Validate Coupon</a>
+      <a href="{{ url_for('history') }}">History</a>
     </nav>
   </header>
-  <main class="content">
+  <main>
     {% block content %}{% endblock %}
   </main>
 </body>

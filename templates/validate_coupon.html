@@ -2,93 +2,29 @@
 {% block title %}Validate Coupon{% endblock %}
 {% block content %}
 <h2>Validate a Coupon</h2>
-
-<form method="post" id="validateForm">
+<form method="post">
   <div>
     <label for="code">Coupon Code:</label>
-    <input type="text" name="code" id="couponInput" required autocomplete="off">
+    <input type="text" name="code" required>
   </div>
-  <div class="button-row">
-    <!-- The Validate button always visible -->
+  <div>
     <input type="submit" value="Validate Coupon">
-    <!-- The Scan button (shown by default) -->
-    <button id="startScan" class="camera-button" type="button" title="Scan Coupon">
-      Scan
-    </button>
-    <!-- The Cancel button (hidden by default) -->
-    <button id="cancelScan" class="camera-button" type="button" style="display:none;">
-      Cancel
-    </button>
   </div>
 </form>
 
-<!-- Camera feed area, hidden by default -->
-<div id="reader" class="camera-reader" style="display:none;"></div>
-
 {% if message %}
   {% if "valid" in message %}
-    <div class="alert-success">{{ message }}</div>
+    <div style="background-color: #d4edda; color: #155724; padding: 10px; margin-top: 10px;">
+      {{ message }}
+    </div>
   {% elif "redeemed" in message or "expired" in message %}
-    <div class="alert-error">{{ message }}</div>
+    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-top: 10px;">
+      {{ message }}
+    </div>
   {% else %}
-    <div class="alert-info">{{ message }}</div>
+    <div style="background-color: #cce5ff; color: #0c5460; padding: 10px; margin-top: 10px;">
+      {{ message }}
+    </div>
   {% endif %}
 {% endif %}
-
-<!-- Include html5-qrcode library from CDN -->
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-  const startScanButton = document.getElementById('startScan');
-  const cancelScanButton = document.getElementById('cancelScan');
-  const couponInput = document.getElementById('couponInput');
-  const readerElement = document.getElementById('reader');
-
-  let html5QrCode = null;
-
-  startScanButton.addEventListener('click', () => {
-    // Hide "Scan," show "Cancel"
-    startScanButton.style.display = 'none';
-    cancelScanButton.style.display = 'inline-flex';
-    // Show the camera feed area
-    readerElement.style.display = 'block';
-
-    // Initialize the QR code scanner
-    html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      (decodedText) => {
-        // On successful scan, fill input and submit form
-        couponInput.value = decodedText;
-        stopCamera();
-        document.getElementById('validateForm').submit();
-      },
-      (errorMessage) => {
-        console.warn("Scan error:", errorMessage);
-      }
-    ).catch(err => {
-      console.error("Unable to start scanning.", err);
-    });
-  });
-
-  cancelScanButton.addEventListener('click', () => {
-    // Stop scanning without submitting
-    stopCamera();
-  });
-
-  function stopCamera() {
-    if (html5QrCode) {
-      html5QrCode.stop().then(() => {
-        readerElement.innerHTML = "";
-      }).catch(err => {
-        console.error("Error stopping scanner", err);
-      });
-    }
-    // Show "Scan," hide "Cancel"
-    startScanButton.style.display = 'inline-flex';
-    cancelScanButton.style.display = 'none';
-    // Hide camera feed
-    readerElement.style.display = 'none';
-  }
-</script>
 {% endblock %}

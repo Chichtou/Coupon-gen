@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Generate Coupons{% endblock %}
 {% block content %}
-<h2>Generate Coupons or Upload Emails</h2>
+<h2>Generate Coupons</h2>
 <form method="post" enctype="multipart/form-data">
   <div>
     <label for="count">Number of Coupons:</label>
@@ -12,21 +12,25 @@
     <input type="file" name="file" accept=".csv">
   </div>
   <div>
-    <input type="submit" value="Generate Coupons">
+    <label for="client">Client/Session Name:</label>
+    <input type="text" name="client" placeholder="e.g. ACME Inc">
   </div>
-  <p>You can either enter a number to generate that many coupons (without email) or upload a CSV file containing emails (one per row) to generate a coupon for each email.</p>
+  <div>
+    <input type="submit" value="Generate">
+  </div>
 </form>
 
 {% if coupons %}
   <h3>Generated Coupons</h3>
-  <table class="coupon-table">
+  <table border="1" cellpadding="8">
     <thead>
       <tr>
         <th>Email</th>
-        <th>Coupon Code</th>
-        <th>QR Code</th>
+        <th>Code</th>
+        <th>QR URL</th>
         <th>Created At</th>
         <th>Expires At</th>
+        <th>Client</th>
       </tr>
     </thead>
     <tbody>
@@ -34,14 +38,18 @@
       <tr>
         <td>{{ coupon.email or "N/A" }}</td>
         <td>{{ coupon.code }}</td>
-        <td><img src="{{ coupon.qr }}" alt="QR for {{ coupon.code }}"></td>
+        <td><a href="{{ coupon.qr_url }}" target="_blank">View QR</a></td>
         <td>{{ coupon.created_at }}</td>
         <td>{{ coupon.expires_at }}</td>
+        <td>{{ coupon.client or "N/A" }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-  <!-- Download CSV link -->
-  <a class="download-link" href="data:text/csv;charset=utf-8,{{ csv_data|urlencode }}" download="coupons.csv">Download CSV</a>
+  <p>
+    <a href="data:text/csv;charset=utf-8,{{ csv_data|urlencode }}" download="coupons.csv">
+      Download CSV
+    </a>
+  </p>
 {% endif %}
 {% endblock %}

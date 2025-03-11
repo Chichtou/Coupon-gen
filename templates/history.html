@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<h2>Coupon History</h2>
+
+<form method="get" action="{{ url_for('history') }}">
+  <label>Filter by client:</label>
+  <input type="text" name="client" placeholder="Client name" value="{{ request.args.get('client', '') }}">
+  <input type="submit" value="Filter">
+</form>
+
+<table border="1" cellpadding="8">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Email</th>
+      <th>Status</th>
+      <th>Redeemed At</th>
+      <th>Client</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for coupon in coupons %}
+    <tr>
+      <td>{{ coupon.code }}</td>
+      <td>{{ coupon.email or "N/A" }}</td>
+      <td>
+        {% if coupon.redeemed %}
+          <span style="color: green;">Redeemed</span>
+        {% else %}
+          <span style="color: red;">Not Redeemed</span>
+        {% endif %}
+      </td>
+      <td>{{ coupon.redeemed_at if coupon.redeemed_at else "N/A" }}</td>
+      <td>{{ coupon.client if coupon.client else "N/A" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
