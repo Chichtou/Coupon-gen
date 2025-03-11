@@ -3,7 +3,6 @@
 {% block content %}
 <h2>Generate Coupons</h2>
 
-<!-- If there's an error_message, display it in a red box -->
 {% if error_message %}
 <div class="alert-error">{{ error_message }}</div>
 {% endif %}
@@ -34,6 +33,7 @@
         <th>Email</th>
         <th>Code</th>
         <th>QR File</th>
+        <th>File Manager Link</th>
         <th>Created At</th>
         <th>Expires At</th>
         <th>Client</th>
@@ -45,6 +45,7 @@
         <td>{{ coupon.email or "N/A" }}</td>
         <td>{{ coupon.code }}</td>
         <td>{{ coupon.qr_file }}</td>
+        <td><a href="{{ coupon.qr_link }}" target="_blank">{{ coupon.qr_link }}</a></td>
         <td>{{ coupon.created_at }}</td>
         <td>{{ coupon.expires_at }}</td>
         <td>{{ coupon.client or "N/A" }}</td>

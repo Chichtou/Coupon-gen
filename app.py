@@ -14,12 +14,12 @@ app = Flask(__name__)
 
 DATABASE = 'coupons.db'
 DEFAULT_DOMAIN = 'elpatrontaqueriabar.ca'
-# Adjust these to match your PythonAnywhere setup
-USERNAME = 'Luxtech'  # e.g. "Luxtech" on PythonAnywhere
-# The local folder for QR code images
+
+# This is your local folder for QR images
 STATIC_QR_FOLDER = '/home/Luxtech/Coupon-gen/qr-images'
-# The public URL prefix so we can share the image link in the CSV
-QR_IMAGES_URL = f"https://{USERNAME}.pythonanywhere.com/qr_images"
+# This is the exact link you see in the PythonAnywhere file manager
+# (not publicly accessible, but stored in CSV).
+FILE_MANAGER_URL = "https://www.pythonanywhere.com/user/Luxtech/files/home/Luxtech/Coupon-gen/qr-images"
 
 def init_db():
     """Create the coupons table if it doesn't already exist."""
@@ -73,6 +73,7 @@ def generate_coupons():
       - Or upload a CSV of emails
       - Optionally specify a client name
     Displays the generated coupons & provides a downloadable CSV.
+    If neither is provided, we show an error on the same page.
     """
     coupons = []
     csv_output = ""
@@ -124,13 +125,14 @@ def generate_coupons():
                         (email, code, now, expires_at, DEFAULT_DOMAIN, client_name)
                     )
                     filename = generate_qr_file(code)
-                    # Build a public URL for the CSV
-                    qr_url = f"{QR_IMAGES_URL}/{filename}"
+                    # Build the PythonAnywhere file manager link
+                    # (not publicly accessible, but stored in CSV)
+                    file_link = f"{FILE_MANAGER_URL}/{filename}"
                     coupons.append({
                         'email': email,
                         'code': code,
                         'qr_file': filename,
-                        'qr_url': qr_url,
+                        'qr_link': file_link,
                         'created_at': now.strftime('%Y-%m-%d %H:%M:%S'),
                         'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
                         'redeemed': 0,
@@ -155,12 +157,12 @@ def generate_coupons():
                         (None, code, now, expires_at, DEFAULT_DOMAIN, client_name)
                     )
                     filename = generate_qr_file(code)
-                    qr_url = f"{QR_IMAGES_URL}/{filename}"
+                    file_link = f"{FILE_MANAGER_URL}/{filename}"
                     coupons.append({
                         'email': '',
                         'code': code,
                         'qr_file': filename,
-                        'qr_url': qr_url,
+                        'qr_link': file_link,
                         'created_at': now.strftime('%Y-%m-%d %H:%M:%S'),
                         'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
                         'redeemed': 0,
@@ -170,7 +172,7 @@ def generate_coupons():
 
         # Build CSV
         output = io.StringIO()
-        fieldnames = ['email', 'code', 'qr_file', 'qr_url', 'created_at', 'expires_at', 'redeemed', 'client']
+        fieldnames = ['email', 'code', 'qr_file', 'qr_link', 'created_at', 'expires_at', 'redeemed', 'client']
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         for coupon in coupons:
@@ -178,7 +180,7 @@ def generate_coupons():
                 'email': coupon['email'],
                 'code': coupon['code'],
                 'qr_file': coupon['qr_file'],
-                'qr_url': coupon['qr_url'],
+                'qr_link': coupon['qr_link'],
                 'created_at': coupon['created_at'],
                 'expires_at': coupon['expires_at'],
                 'redeemed': coupon['redeemed'],
