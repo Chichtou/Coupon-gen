@@ -1,62 +1,53 @@
-/* ========== Base (Mobile) Styles ========== */
-
-/* Make sure the site is not zoomed out on mobile */
-html, body {
+body {
   margin: 0;
-  padding: 0;
+  padding: 20px;
   font-family: sans-serif;
   background-color: #f8f9fa;
 }
 
-/* Container spacing for mobile */
-body {
-  padding: 10px;
-}
-
-header {
-  margin-bottom: 20px;
+main {
+  margin-top: 20px;
 }
 
 h1, h2 {
   color: #333;
-  margin: 0 0 10px;
-  font-size: 1.4rem; /* Mobile-friendly heading size */
 }
 
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-  justify-content: center;
+/* Nav bar styling */
+nav {
+  background-color: #1f1f1f;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  gap: 0.75rem;
 }
 
-.menu a {
+nav a {
+  color: #ffffff;
   text-decoration: none;
-  color: #333;
-  padding: 6px 8px;
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
   transition: background-color 0.2s;
-  white-space: nowrap;
-  font-size: 0.9rem;
 }
 
-.menu a:hover {
-  background-color: #e2e6ea;
+nav a:hover {
+  background-color: #2e2e38;
 }
 
-.content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow-x: auto; /* Allows horizontal scrolling if table is too wide */
+/* Table styling */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
 }
 
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+/* Form styling */
 form div {
   margin-bottom: 10px;
 }
@@ -64,15 +55,16 @@ form div {
 form label {
   display: block;
   margin-bottom: 4px;
+  font-weight: 600;
 }
 
 input[type="text"],
-input[type="email"],
 input[type="number"],
 input[type="file"] {
   width: 100%;
+  max-width: 300px;
   padding: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
@@ -82,7 +74,6 @@ input[type="submit"] {
   background-color: #007bff;
   color: #fff;
   padding: 8px 16px;
-  font-size: 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -92,66 +83,7 @@ input[type="submit"]:hover {
   background-color: #0056b3;
 }
 
-p {
-  line-height: 1.6;
-}
-
-/* Container for Validate + Scan/Cancel buttons */
-.button-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-/* Shared button styling */
-.camera-button {
-  background: none;
-  border: 2px solid #007bff;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #007bff;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: background-color 0.3s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.camera-button:hover {
-  background-color: #e2e6ea;
-}
-
-/* Camera feed area */
-.camera-reader {
-  margin-top: 10px;
-  border: 2px dashed #007bff;
-  border-radius: 8px;
-  width: 300px;
-  height: 300px;
-}
-
-
-/* Coupon preview table */
-.coupon-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.coupon-table th,
-.coupon-table td {
-  border: 1px solid #ccc;
-  padding: 6px;
-  text-align: center;
-  font-size: 0.85rem;
-}
-
-.coupon-table th {
-  background-color: #f0f0f0;
-}
-
+/* Download link as a button */
 .download-link {
   display: inline-block;
   margin-top: 10px;
@@ -160,14 +92,13 @@ p {
   color: #fff;
   text-decoration: none;
   border-radius: 4px;
-  transition: background-color 0.3s;
 }
 
 .download-link:hover {
   background-color: #218838;
 }
 
-/* Alert messages for validation results */
+/* Alert boxes */
 .alert-success {
   background-color: #d4edda;
   color: #155724;
@@ -192,33 +123,31 @@ p {
   margin-top: 10px;
 }
 
-/* ========== Desktop Styles (>= 768px) ========== */
-@media (min-width: 768px) {
-  body {
-    padding: 20px;
-  }
+/* Delete button styling */
+.delete-button {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-  h1, h2 {
-    font-size: 1.8rem;
-  }
+.delete-button:hover {
+  background-color: #c82333;
+}
 
-  .menu {
-    flex-direction: row;
-    gap: 10px;
-  }
+/* Camera Scan Button */
+.camera-button {
+  background-color: #17a2b8;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  margin-left: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-  .menu a {
-    padding: 8px 12px;
-    font-size: 1rem;
-  }
-
-  .content {
-    padding: 20px;
-  }
-
-  .coupon-table th,
-  .coupon-table td {
-    font-size: 0.9rem;
-    padding: 8px;
-  }
+.camera-button:hover {
+  background-color: #138496;
 }

@@ -2,29 +2,70 @@
 {% block title %}Validate Coupon{% endblock %}
 {% block content %}
 <h2>Validate a Coupon</h2>
-<form method="post">
+
+<form method="post" id="validateForm">
   <div>
     <label for="code">Coupon Code:</label>
-    <input type="text" name="code" required>
+    <input type="text" name="code" id="couponInput" required>
   </div>
   <div>
     <input type="submit" value="Validate Coupon">
+    <!-- Scan button (no form submission) -->
+    <button type="button" id="startScan" class="camera-button">Scan</button>
   </div>
 </form>
 
+<!-- The camera feed container (hidden by default) -->
+<div id="reader" style="width:300px; margin-top:10px; display:none;"></div>
+
 {% if message %}
   {% if "valid" in message %}
-    <div style="background-color: #d4edda; color: #155724; padding: 10px; margin-top: 10px;">
-      {{ message }}
-    </div>
+    <div class="alert-success">{{ message }}</div>
   {% elif "redeemed" in message or "expired" in message %}
-    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-top: 10px;">
-      {{ message }}
-    </div>
+    <div class="alert-error">{{ message }}</div>
   {% else %}
-    <div style="background-color: #cce5ff; color: #0c5460; padding: 10px; margin-top: 10px;">
-      {{ message }}
-    </div>
+    <div class="alert-info">{{ message }}</div>
   {% endif %}
 {% endif %}
+
+<!-- Include html5-qrcode library from CDN -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+  const startScanButton = document.getElementById('startScan');
+  const couponInput = document.getElementById('couponInput');
+  const readerElement = document.getElementById('reader');
+  const validateForm = document.getElementById('validateForm');
+
+  let html5QrCode = null;
+
+  startScanButton.addEventListener('click', () => {
+    // Show the camera feed
+    readerElement.style.display = 'block';
+
+    html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 250 };
+
+    html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText, decodedResult) => {
+        // On successful scan, fill the input and submit
+        couponInput.value = decodedText;
+        // Stop scanning
+        html5QrCode.stop().then(() => {
+          readerElement.innerHTML = "";
+          readerElement.style.display = 'none';
+          validateForm.submit();
+        }).catch(err => {
+          console.error("Error stopping scanner", err);
+        });
+      },
+      (errorMessage) => {
+        console.warn("Scan error:", errorMessage);
+      }
+    ).catch(err => {
+      console.error("Unable to start scanning.", err);
+    });
+  });
+</script>
 {% endblock %}

@@ -9,14 +9,15 @@
   <input type="submit" value="Filter">
 </form>
 
-<table border="1" cellpadding="8">
+<table>
   <thead>
     <tr>
       <th>Code</th>
       <th>Email</th>
       <th>Status</th>
-      <th>Redeemed At</th>
+      <th>Domain</th>
       <th>Client</th>
+      <th>Action</th>
     </tr>
   </thead>
   <tbody>
@@ -31,8 +32,15 @@
           <span style="color: red;">Not Redeemed</span>
         {% endif %}
       </td>
-      <td>{{ coupon.redeemed_at if coupon.redeemed_at else "N/A" }}</td>
+      <td>{{ coupon.domain }}</td>
       <td>{{ coupon.client if coupon.client else "N/A" }}</td>
+      <td>
+        <!-- Delete button form -->
+        <form method="POST" action="{{ url_for('delete_coupon') }}" style="display:inline;">
+          <input type="hidden" name="code" value="{{ coupon.code }}">
+          <button type="submit" class="delete-button">Delete</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

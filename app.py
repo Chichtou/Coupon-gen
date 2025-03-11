@@ -7,17 +7,19 @@ import csv
 import io
 from datetime import datetime, timedelta
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for
 import qrcode
 
 app = Flask(__name__)
 
-# Adjust these to your environment
 DATABASE = 'coupons.db'
 DEFAULT_DOMAIN = 'elpatrontaqueriabar.ca'
-USERNAME = 'Luxtech'  # Your PythonAnywhere username
-STATIC_QR_FOLDER = "/home/Luxtech/Coupon-gen/qr_images"  # Where QR images are saved locally
-STATIC_QR_URL = f"https://{USERNAME}.pythonanywhere.com/qr_images"  # Public URL prefix
+# Adjust these to match your PythonAnywhere setup
+USERNAME = 'Luxtech'  # e.g. "Luxtech" on PythonAnywhere
+# The local folder for QR code images
+STATIC_QR_FOLDER = '/home/Luxtech/Coupon-gen/qr-images'
+# The public URL prefix so we can share the image link in the CSV
+QR_IMAGES_URL = f"https://{USERNAME}.pythonanywhere.com/qr_images"
 
 def init_db():
     """Create the coupons table if it doesn't already exist."""
@@ -38,49 +40,24 @@ def init_db():
         ''')
         conn.commit()
 
-def update_db():
-    """
-    If you already have a 'coupons' table without 'client' or 'redeemed_at',
-    run this once to add them, then comment it out.
-    """
-    with sqlite3.connect(DATABASE) as conn:
-        c = conn.cursor()
-        # Add 'client' and 'redeemed_at' if they don't exist
-        try:
-            c.execute("ALTER TABLE coupons ADD COLUMN client TEXT DEFAULT ''")
-        except:
-            pass
-        try:
-            c.execute("ALTER TABLE coupons ADD COLUMN redeemed_at TIMESTAMP")
-        except:
-            pass
-        conn.commit()
-
 def generate_coupon_code():
-    """Generates a short coupon code starting with 'VIP' followed by 4 random alphanumeric characters."""
+    """Generates a short coupon code like VIPAB12."""
     return "VIP" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 
 def generate_qr_file(code):
     """
-    Generates a QR code PNG file in the local folder (qr_images/).
-    Returns the filename so we can reference it in a public URL.
+    Generates a QR code PNG file in STATIC_QR_FOLDER.
+    Returns the filename.
     """
-    # Create a QR code
     qr = qrcode.QRCode(version=1, box_size=6, border=2)
     qr.add_data(code)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
 
-    # Ensure the local folder exists
     os.makedirs(STATIC_QR_FOLDER, exist_ok=True)
-
-    # Create a unique filename, e.g., "VIPABCD-<uuid>.png"
     filename = f"{code}-{uuid.uuid4().hex}.png"
     filepath = os.path.join(STATIC_QR_FOLDER, filename)
-
-    # Save the PNG
     img.save(filepath)
-
     return filename
 
 @app.route('/')
@@ -92,32 +69,38 @@ def index():
 def generate_coupons():
     """
     Allows the user to:
-      - Enter a number (count) to generate that many coupons with no email
-      - Upload a CSV file of emails
-      - Specify a client/session name
-    Returns a page displaying the generated coupons and a downloadable CSV
-    referencing a public QR URL (hosted automatically on PythonAnywhere).
+      - Enter a number to generate that many coupons (no email)
+      - Or upload a CSV of emails
+      - Optionally specify a client name
+    Displays the generated coupons & provides a downloadable CSV.
     """
     coupons = []
     csv_output = ""
+    error_message = None
+
     if request.method == 'POST':
         file = request.files.get('file')
         count_str = request.form.get('count', '').strip()
-        client_name = request.form.get('client', '').strip()  # new client/session field
+        client_name = request.form.get('client', '').strip()
         now = datetime.now()
         expires_at = now + timedelta(days=30)
 
+        # If user provided neither file nor count, show error on same page
+        if (not file or file.filename == '') and (not count_str):
+            error_message = "Please provide a CSV file or a number of coupons to generate."
+            return render_template("generate_coupons.html", coupons=None, error_message=error_message)
+
         if file and file.filename != '':
-            # Case 1: CSV file of emails
+            # CSV file
             try:
                 stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
             except Exception as e:
-                return f"Error reading file: {str(e)}", 400
+                error_message = f"Error reading file: {str(e)}"
+                return render_template("generate_coupons.html", coupons=None, error_message=error_message)
 
             reader = csv.reader(stream)
             emails = []
             first_row = next(reader, None)
-            # If first row might be a header with "email"
             if first_row and any("email" in cell.lower() for cell in first_row):
                 pass
             else:
@@ -129,7 +112,8 @@ def generate_coupons():
                     emails.append(row[0])
 
             if not emails:
-                return "No emails found in the file.", 400
+                error_message = "No emails found in the file."
+                return render_template("generate_coupons.html", coupons=None, error_message=error_message)
 
             with sqlite3.connect(DATABASE) as conn:
                 c = conn.cursor()
@@ -140,10 +124,12 @@ def generate_coupons():
                         (email, code, now, expires_at, DEFAULT_DOMAIN, client_name)
                     )
                     filename = generate_qr_file(code)
-                    qr_url = f"{STATIC_QR_URL}/{filename}"  # public URL
+                    # Build a public URL for the CSV
+                    qr_url = f"{QR_IMAGES_URL}/{filename}"
                     coupons.append({
                         'email': email,
                         'code': code,
+                        'qr_file': filename,
                         'qr_url': qr_url,
                         'created_at': now.strftime('%Y-%m-%d %H:%M:%S'),
                         'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -153,11 +139,12 @@ def generate_coupons():
                 conn.commit()
 
         elif count_str:
-            # Case 2: Numeric count
+            # Numeric count
             try:
                 count = int(count_str)
             except ValueError:
-                return "Invalid number", 400
+                error_message = "Invalid number"
+                return render_template("generate_coupons.html", coupons=None, error_message=error_message)
 
             with sqlite3.connect(DATABASE) as conn:
                 c = conn.cursor()
@@ -168,10 +155,11 @@ def generate_coupons():
                         (None, code, now, expires_at, DEFAULT_DOMAIN, client_name)
                     )
                     filename = generate_qr_file(code)
-                    qr_url = f"{STATIC_QR_URL}/{filename}"
+                    qr_url = f"{QR_IMAGES_URL}/{filename}"
                     coupons.append({
                         'email': '',
                         'code': code,
+                        'qr_file': filename,
                         'qr_url': qr_url,
                         'created_at': now.strftime('%Y-%m-%d %H:%M:%S'),
                         'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -179,18 +167,17 @@ def generate_coupons():
                         'client': client_name
                     })
                 conn.commit()
-        else:
-            return "Please provide a CSV file or a number of coupons to generate.", 400
 
         # Build CSV
         output = io.StringIO()
-        fieldnames = ['email', 'code', 'qr_url', 'created_at', 'expires_at', 'redeemed', 'client']
+        fieldnames = ['email', 'code', 'qr_file', 'qr_url', 'created_at', 'expires_at', 'redeemed', 'client']
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         for coupon in coupons:
             writer.writerow({
                 'email': coupon['email'],
                 'code': coupon['code'],
+                'qr_file': coupon['qr_file'],
                 'qr_url': coupon['qr_url'],
                 'created_at': coupon['created_at'],
                 'expires_at': coupon['expires_at'],
@@ -200,22 +187,23 @@ def generate_coupons():
         csv_output = output.getvalue()
         output.close()
 
-        return render_template("generate_coupons.html", coupons=coupons, csv_data=csv_output)
+        return render_template("generate_coupons.html", coupons=coupons, csv_data=csv_output, error_message=None)
 
-    # If GET request
-    return render_template("generate_coupons.html", coupons=None)
+    # GET request
+    return render_template("generate_coupons.html", coupons=None, error_message=None)
 
 @app.route('/validate_coupon', methods=['GET', 'POST'])
 def validate_coupon():
     """
-    Validates a coupon code. Sets redeemed_at on success.
+    Validates a coupon code, sets redeemed=1 if valid.
+    Also includes a Scan button to use phone camera with html5-qrcode.
     """
     message = None
     if request.method == 'POST':
         code = request.form['code']
         with sqlite3.connect(DATABASE) as conn:
             c = conn.cursor()
-            c.execute("SELECT expires_at, redeemed FROM coupons WHERE code = ?", (code,))
+            c.execute("SELECT expires_at, redeemed FROM coupons WHERE code=?", (code,))
             result = c.fetchone()
             if result:
                 expires_at_str, redeemed = result
@@ -226,10 +214,7 @@ def validate_coupon():
                     message = "This coupon has expired."
                 else:
                     message = "This coupon is valid and now redeemed!"
-                    c.execute(
-                        "UPDATE coupons SET redeemed=1, redeemed_at=? WHERE code=?",
-                        (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), code)
-                    )
+                    c.execute("UPDATE coupons SET redeemed=1 WHERE code=?", (code,))
                     conn.commit()
             else:
                 message = "Coupon code not found."
@@ -238,29 +223,39 @@ def validate_coupon():
 @app.route('/history')
 def history():
     """
-    Shows a list of coupons with redemption status. Optional filter by client.
+    Shows a list of coupons with redemption status. 
+    Optional filter by client: /history?client=XYZ
     """
     client_name = request.args.get('client', '')
     with sqlite3.connect(DATABASE) as conn:
         c = conn.cursor()
         if client_name:
-            c.execute("SELECT code, email, redeemed, redeemed_at, client FROM coupons WHERE client=?", (client_name,))
+            c.execute("SELECT code, email, redeemed, domain, client FROM coupons WHERE client=?", (client_name,))
         else:
-            c.execute("SELECT code, email, redeemed, redeemed_at, client FROM coupons")
+            c.execute("SELECT code, email, redeemed, domain, client FROM coupons")
         rows = c.fetchall()
 
     coupons = []
-    for code, email, redeemed, redeemed_at, client in rows:
+    for code, email, redeemed, domain, client in rows:
         coupons.append({
             'code': code,
             'email': email,
             'redeemed': redeemed,
-            'redeemed_at': redeemed_at,
+            'domain': domain,
             'client': client
         })
     return render_template("history.html", coupons=coupons)
 
+@app.route('/delete_coupon', methods=['POST'])
+def delete_coupon():
+    """Deletes a coupon by its code, then redirects back to history page."""
+    code = request.form.get('code', '')
+    with sqlite3.connect(DATABASE) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM coupons WHERE code=?", (code,))
+        conn.commit()
+    return redirect(url_for('history'))
+
 if __name__ == '__main__':
     init_db()
-    # update_db()  # Uncomment and run once if you need to add 'client' & 'redeemed_at' to an existing DB
     app.run(debug=True)

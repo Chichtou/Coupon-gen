@@ -2,6 +2,12 @@
 {% block title %}Generate Coupons{% endblock %}
 {% block content %}
 <h2>Generate Coupons</h2>
+
+<!-- If there's an error_message, display it in a red box -->
+{% if error_message %}
+<div class="alert-error">{{ error_message }}</div>
+{% endif %}
+
 <form method="post" enctype="multipart/form-data">
   <div>
     <label for="count">Number of Coupons:</label>
@@ -22,12 +28,12 @@
 
 {% if coupons %}
   <h3>Generated Coupons</h3>
-  <table border="1" cellpadding="8">
+  <table>
     <thead>
       <tr>
         <th>Email</th>
         <th>Code</th>
-        <th>QR URL</th>
+        <th>QR File</th>
         <th>Created At</th>
         <th>Expires At</th>
         <th>Client</th>
@@ -38,7 +44,7 @@
       <tr>
         <td>{{ coupon.email or "N/A" }}</td>
         <td>{{ coupon.code }}</td>
-        <td><a href="{{ coupon.qr_url }}" target="_blank">View QR</a></td>
+        <td>{{ coupon.qr_file }}</td>
         <td>{{ coupon.created_at }}</td>
         <td>{{ coupon.expires_at }}</td>
         <td>{{ coupon.client or "N/A" }}</td>
@@ -47,7 +53,7 @@
     </tbody>
   </table>
   <p>
-    <a href="data:text/csv;charset=utf-8,{{ csv_data|urlencode }}" download="coupons.csv">
+    <a href="data:text/csv;charset=utf-8,{{ csv_data|urlencode }}" download="coupons.csv" class="download-link">
       Download CSV
     </a>
   </p>
