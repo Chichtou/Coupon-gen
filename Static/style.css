@@ -204,9 +204,30 @@ html, body {
       padding: 8px;
     }
   
-    .camera-button {
-      font-size: 1.8rem;
-      padding: 10px;
-    }
+.button-row {
+    display: flex;
+    gap: 8px; /* space between buttons */
+    align-items: center; /* vertically center them */
+    margin-bottom: 10px;
   }
   
+  .camera-button {
+    background: none;
+    border: 2px solid #007bff;
+    cursor: pointer;
+    font-size: 13.3333px;
+    color: #007bff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin:0px;
+    transition: background-color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .camera-button:hover {
+    background-color: #e2e6ea;
+  }
+  
+}

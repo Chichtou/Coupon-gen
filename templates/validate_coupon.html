@@ -8,16 +8,14 @@
     <label for="code">Coupon Code:</label>
     <input type="text" name="code" id="couponInput" required>
   </div>
-  <div>
+  <!-- Inline the Validate button and the Scan button in the same row -->
+  <div class="button-row">
     <input type="submit" value="Validate Coupon">
+    <button id="startScan" class="camera-button" title="Scan Coupon">
+      Scan
+    </button>
   </div>
 </form>
-
-<!-- Icon button for camera scan using Phosphor Icons -->
-<button id="startScan" class="camera-button" title="Scan Coupon">
-  <i class="ph ph-camera"></i>
-  <span class="fallback-text">Scan</span>
-</button>
 
 <div id="reader" style="width:300px; margin-top:10px;"></div>
 
@@ -39,7 +37,9 @@
   const readerElement = document.getElementById('reader');
 
   startScanButton.addEventListener('click', () => {
+    // Hide the button when scanning starts (optional)
     startScanButton.style.display = 'none';
+
     const html5QrCode = new Html5Qrcode("reader");
     const config = { fps: 10, qrbox: 250 };
 
@@ -47,6 +47,7 @@
       { facingMode: "environment" },
       config,
       (decodedText, decodedResult) => {
+          // On successful scan, fill the input and submit the form.
           couponInput.value = decodedText;
           html5QrCode.stop().then(() => {
               readerElement.innerHTML = "";
