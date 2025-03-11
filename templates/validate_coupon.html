@@ -22,7 +22,13 @@
 <div id="reader" style="width:300px; margin-top:10px;"></div>
 
 {% if message %}
-<p>{{ message }}</p>
+  {% if "valid" in message %}
+    <div class="alert-success">{{ message }}</div>
+  {% elif "redeemed" in message or "expired" in message %}
+    <div class="alert-error">{{ message }}</div>
+  {% else %}
+    <div class="alert-info">{{ message }}</div>
+  {% endif %}
 {% endif %}
 
 <!-- Include html5-qrcode library from CDN -->
@@ -33,7 +39,6 @@
   const readerElement = document.getElementById('reader');
 
   startScanButton.addEventListener('click', () => {
-    // Hide the scan button when scanning starts.
     startScanButton.style.display = 'none';
     const html5QrCode = new Html5Qrcode("reader");
     const config = { fps: 10, qrbox: 250 };
@@ -42,7 +47,6 @@
       { facingMode: "environment" },
       config,
       (decodedText, decodedResult) => {
-          // On successful scan, fill the input and submit the form.
           couponInput.value = decodedText;
           html5QrCode.stop().then(() => {
               readerElement.innerHTML = "";
