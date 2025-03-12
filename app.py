@@ -19,7 +19,7 @@ DEFAULT_DOMAIN = 'elpatrontaqueriabar.ca'
 STATIC_QR_FOLDER = '/home/Luxtech/Coupon-gen/qr-images'
 # This is the exact link you see in the PythonAnywhere file manager
 # (not publicly accessible, but stored in CSV).
-FILE_MANAGER_URL = "https://www.pythonanywhere.com/user/Luxtech/files/home/Luxtech/Coupon-gen/qr-images"
+FILE_MANAGER_URL = "https://luxtech.pythonanywhere.com/qr_images/"
 
 def init_db():
     """Create the coupons table if it doesn't already exist."""
